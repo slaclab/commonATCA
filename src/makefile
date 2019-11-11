@@ -10,8 +10,10 @@ include $(CPSW_DIR)/defs.mak
 INSTALL_DIR=../
 
 HEADERS += atcaCommon.h
+HEADERS += crossbarControlYaml.hh
 
 commonATCA_SRCS += atcaCommon.cc
+commonATCA_SRCS += crossbarControlYaml.cc
 commonATCA_LIBS = $(CPSW_LIBS)
 
 
