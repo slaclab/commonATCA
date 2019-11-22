@@ -30,6 +30,7 @@ public:
     virtual void decimationRateDivisor(uint32_t div, int index) = 0;
     virtual void dataBufferSize(uint32_t size, int index)       = 0;
     virtual void getTimestamp(uint32_t *sec, uint32_t *nsec, int index) = 0;
+    virtual void getTriggerCount(uint32_t *val, int index) = 0;
     virtual void dbgInputValid(uint32_t *val, int index)   = 0;
     virtual void dbgLinkReady(uint32_t *val, int index)    = 0;
     virtual void inputMuxSelect(uint32_t val, int index, int chn) = 0;

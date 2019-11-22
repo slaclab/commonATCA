@@ -189,7 +189,7 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
 
         for(int j = 0; j < 2; j++) {
             char name[80];
-            sprintf(name, "Timestamp[%d]", j); (_daqMux+i)->_timestamp[0] = IScalVal_RO::create(_p_daqMuxV2[i]->findByName(name));
+            sprintf(name, "Timestamp[%d]", j); (_daqMux+i)->_timestamp[j] = IScalVal_RO::create(_p_daqMuxV2[i]->findByName(name));
         }
 
         (_daqMux+i)->_triggerDaq      = ICommand::create(_p_daqMuxV2[i]->findByName("TriggerDaq"));
