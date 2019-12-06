@@ -157,7 +157,7 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     }
 
     for(int i = 0; i<MAX_DAQMUX_CNT; i++) {
-
+        (_daqMux+i)->_triggerCasc       = IScalVal::create(_p_daqMuxV2[i]->findByName("TriggerCascMask"));
         (_daqMux+i)->_autoRearm         = IScalVal::create(_p_daqMuxV2[i]->findByName("TriggerHwAutoRearm"));
         (_daqMux+i)->_daqMode           = IScalVal::create(_p_daqMuxV2[i]->findByName("DaqMode"));
         (_daqMux+i)->_packetHeader      = IScalVal::create(_p_daqMuxV2[i]->findByName("PacketHeaderEn"));
