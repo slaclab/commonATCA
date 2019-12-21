@@ -1,5 +1,3 @@
-#include "atcaCommon.h"
-
 #include <cpsw_yaml.h>
 #include <yaml-cpp/yaml.h>
 #include <cpsw_sval.h>
@@ -11,7 +9,11 @@
 #include <string.h>
 #include <math.h>
 
+#include "atcaCommon.h"
+
+#define MAX_DEBUG_STREAM   8
 #define MAX_DAQMUX_CNT     2
+#define MAX_WAVEFORMENGINE_CNT 2
 
 #define MAX_JESD_CNT       8
 #define NUM_JESD           2
@@ -38,7 +40,13 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         Path         _p_jesd0;
         Path         _p_jesd1;
 
+        Path         _p_waveformEngine[MAX_WAVEFORMENGINE_CNT];
+
+
         Path         _p_daqMuxV2[MAX_DAQMUX_CNT];
+
+// debug stream
+        Stream      _stream[MAX_DEBUG_STREAM];
 
 // Common
         ScalVal_RO   _upTimeCnt;
@@ -79,9 +87,23 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         Command      _clearTrigStatus;
         } _daqMux[MAX_DAQMUX_CNT];
 
+// Waveform Engines
+
+        struct {
+        ScalVal     _startAddr[4];
+        ScalVal     _endAddr[4];
+        ScalVal_RO  _wrAddr[4];
+        ScalVal     _enabled[4];
+        ScalVal     _mode[4];
+        Command     _initialize;
+        } _waveformEngine[MAX_WAVEFORMENGINE_CNT];
+
+        void init_waveformBuffers(void);
 
     public:
         CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEntryImpl> ie);
+        virtual void createStreams(ConstPath p, const char *prefix);
+        virtual int64_t readStream(uint32_t index, uint8_t *buff, uint64_t size, CTimeout timeout);
         virtual void getUpTimeCnt(uint32_t *cnt);
         virtual void getBuildStamp(uint8_t *str);
         virtual void getFpgaVersion(uint32_t *ver);
@@ -143,6 +165,9 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     _p_daqMuxV2[0] = p->findByName("AppTop/DaqMuxV2[0]");
     _p_daqMuxV2[1] = p->findByName("AppTop/DaqMuxV2[1]");
 
+    _p_waveformEngine[0] = p->findByName("AmcCarrierCore/AmcCarrierBsa/BsaWaveformEngine[0]/WaveformEngineBuffers");
+    _p_waveformEngine[1] = p->findByName("AmcCarrierCore/AmcCarrierBsa/BsaWaveformEngine[1]/WaveformEngineBuffers");
+
     _upTimeCnt    = IScalVal_RO::create(_p_axiVersion->findByName("UpTimeCnt"));
     _buildStamp   = IScalVal_RO::create(_p_axiVersion->findByName("BuildStamp"));
     _fpgaVersion  = IScalVal_RO::create(_p_axiVersion->findByName("FpgaVersion"));
@@ -198,6 +223,56 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
         (_daqMux+i)->_clearTrigStatus = ICommand::create(_p_daqMuxV2[i]->findByName("ClearTrigStatus"));
     }
 
+    for(int i = 0; i < MAX_WAVEFORMENGINE_CNT; i++) {
+        (_waveformEngine+i)->_initialize = ICommand::create(_p_waveformEngine[i]->findByName("Initialize"));
+        for(int j = 0; j < 4; j ++) {
+            char name[80];
+            sprintf(name, "StartAddr[%d]", j); (_waveformEngine+i)->_startAddr[j] = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "EndAddr[%d]",   j); (_waveformEngine+i)->_endAddr[j]   = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "WrAddr[%d]",    j); (_waveformEngine+i)->_wrAddr[j]    = IScalVal_RO::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "Enabled[%d]",   j); (_waveformEngine+i)->_enabled[j]   = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "Mode[%d]",      j); (_waveformEngine+i)->_mode[j]      = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+        }
+    }
+
+    init_waveformBuffers();
+}
+
+void CATCACommonFwAdapt::init_waveformBuffers(void)
+{
+//
+// set up waveform engines with a default setting
+//
+    for(int i = 0; i < MAX_WAVEFORMENGINE_CNT; i++) {
+        uint32_t size  = 0x10000000;    /* 256MB for each waveform */
+        uint32_t start = 0;
+        uint32_t end;
+        for(int j = 0; j < 4; j++) {
+            end = start + size -1;
+            (_waveformEngine+i)->_startAddr[j]->setVal(start);
+            (_waveformEngine+i)->_endAddr[j]->setVal(end);
+            (_waveformEngine+i)->_enabled[j]->setVal(1);
+            (_waveformEngine+i)->_mode[j]->setVal(1);
+            start += size;
+        }
+        (_waveformEngine+i)->_initialize->execute();
+    }
+}
+
+void CATCACommonFwAdapt::createStreams(ConstPath p, const char *prefix = NULL)
+{
+    const char *str_stream = (!prefix)?"Stream%d":prefix;
+    char path_name[80];
+
+    for(int i = 0; i < MAX_DEBUG_STREAM; i++) {
+        sprintf(path_name, str_stream, i); _stream[i] =  IStream::create(p->findByName(path_name));
+    } 
+
+}
+
+int64_t CATCACommonFwAdapt::readStream(uint32_t index, uint8_t *buff, uint64_t size, CTimeout timeout)
+{
+    return _stream[index]->read(buff, size, timeout);
 }
 
 

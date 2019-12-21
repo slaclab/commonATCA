@@ -10,6 +10,11 @@ typedef shared_ptr<IATCACommonFw> ATCACommonFw;
 class IATCACommonFw : public virtual IEntry {
 public:
     static ATCACommonFw create(Path p);
+    // debug streams
+    virtual void createStreams(ConstPath p, const char *prefix)     = 0;
+    virtual int64_t readStream(uint32_t index, uint8_t *buf, uint64_t size, CTimeout timeout) = 0;
+    //
+
     virtual void getUpTimeCnt(uint32_t *cnt)             = 0;
     virtual void getBuildStamp(uint8_t *str)             = 0;
     virtual void getFpgaVersion(uint32_t *ver)           = 0;
