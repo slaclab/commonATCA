@@ -58,6 +58,10 @@ public:
     virtual void enableFormatSign(uint32_t val, int index, int chn)   = 0;
     virtual void enableDecimation(uint32_t val, int index, int chn)   = 0;
 
+    virtual void getWfEngineStartAddr(uint64_t *val, int index, int chn) = 0;
+    virtual void getWfEngineEndAddr(uint64_t *val, int index, int chn) = 0;
+    virtual void getWfEngineWrAddr(uint64_t *val, int index, int chn) = 0;
+
 };
 
 #endif /* _ATCA_COMMON_FW_H */

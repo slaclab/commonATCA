@@ -147,6 +147,10 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void enableFormatSign(uint32_t val, int index, int chn);
         virtual void enableDecimation(uint32_t val, int index, int chn);
 
+        virtual void getWfEngineStartAddr(uint64_t *val, int index, int chn);
+        virtual void getWfEngineEndAddr(uint64_t *val, int index, int chn);
+        virtual void getWfEngineWrAddr(uint64_t *val, int index, int chn);
+
 };
 
 ATCACommonFw IATCACommonFw::create(Path p)
@@ -542,4 +546,17 @@ void CATCACommonFwAdapt::enableDecimation(uint32_t val, int index, int chn)
     CPSW_TRY_CATCH((_daqMux+index)->_decimation[chn]->setVal(val));
 }
 
+void CATCACommonFwAdapt::getWfEngineStartAddr(uint64_t *val, int index, int chn)
+{
+   CPSW_TRY_CATCH((_waveformEngine+index)->_startAddr[chn]->getVal(val));
+}
 
+void CATCACommonFwAdapt::getWfEngineEndAddr(uint64_t *val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_endAddr[chn]->getVal(val));
+}
+
+void CATCACommonFwAdapt::getWfEngineWrAddr(uint64_t *val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_wrAddr[chn]->getVal(val));
+}
