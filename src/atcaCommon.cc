@@ -95,6 +95,9 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         ScalVal_RO  _wrAddr[4];
         ScalVal     _enabled[4];
         ScalVal     _mode[4];
+        ScalVal     _msgDest[4];
+        ScalVal     _framesAfterTrigger[4];
+        ScalVal_RO  _status[4];
         Command     _initialize;
         } _waveformEngine[MAX_WAVEFORMENGINE_CNT];
 
@@ -150,6 +153,17 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void getWfEngineStartAddr(uint64_t *val, int index, int chn);
         virtual void getWfEngineEndAddr(uint64_t *val, int index, int chn);
         virtual void getWfEngineWrAddr(uint64_t *val, int index, int chn);
+        virtual void getWfEngineStatus(uint32_t *val, int index, int chn);
+
+        virtual void setWfEngineStartAddr(uint64_t val, int index, int chn);
+        virtual void setWfEngineEndAddr(uint64_t val, int index, int chn);
+        virtual void enableWfEngine(uint32_t val, int index, int chn);
+        virtual void setWfEngineMode(uint32_t val, int index, int chn);
+        virtual void setWfEngineMsgDest(uint32_t val, int index, int chn);
+        virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn);
+
+        virtual void initWfEngine(int index);
+
 
 };
 
@@ -236,6 +250,10 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
             sprintf(name, "WrAddr[%d]",    j); (_waveformEngine+i)->_wrAddr[j]    = IScalVal_RO::create(_p_waveformEngine[i]->findByName(name));
             sprintf(name, "Enabled[%d]",   j); (_waveformEngine+i)->_enabled[j]   = IScalVal::create(_p_waveformEngine[i]->findByName(name));
             sprintf(name, "Mode[%d]",      j); (_waveformEngine+i)->_mode[j]      = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "MsgDest[%d]",   j); (_waveformEngine+i)->_msgDest[j]   = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "FramesAfterTrigger[%d]", j);
+                                               (_waveformEngine+i)->_framesAfterTrigger[j] = IScalVal::create(_p_waveformEngine[i]->findByName(name));
+            sprintf(name, "Status[%d]",    j); (_waveformEngine+i)->_status[j]    = IScalVal_RO::create(_p_waveformEngine[i]->findByName(name));
         }
     }
 
@@ -250,13 +268,15 @@ void CATCACommonFwAdapt::init_waveformBuffers(void)
     for(int i = 0; i < MAX_WAVEFORMENGINE_CNT; i++) {
         uint32_t size  = 0x10000000;    /* 256MB for each waveform */
         uint32_t start = 0;
-        uint32_t end;
+
         for(int j = 0; j < 4; j++) {
-            end = start + size -1;
             (_waveformEngine+i)->_startAddr[j]->setVal(start);
-            (_waveformEngine+i)->_endAddr[j]->setVal(end);
-            (_waveformEngine+i)->_enabled[j]->setVal(1);
-            (_waveformEngine+i)->_mode[j]->setVal(1);
+            (_waveformEngine+i)->_endAddr[j]->setVal(start + size -1);
+            (_waveformEngine+i)->_framesAfterTrigger[j]->setVal((false)?0:1);
+            (_waveformEngine+i)->_enabled[j]->setVal(1);  // enable
+            (_waveformEngine+i)->_mode[j]->setVal(1);     // done when full
+            (_waveformEngine+i)->_msgDest[j]->setVal(1);  // auto readout
+
             start += size;
         }
         (_waveformEngine+i)->_initialize->execute();
@@ -559,4 +579,45 @@ void CATCACommonFwAdapt::getWfEngineEndAddr(uint64_t *val, int index, int chn)
 void CATCACommonFwAdapt::getWfEngineWrAddr(uint64_t *val, int index, int chn)
 {
     CPSW_TRY_CATCH((_waveformEngine+index)->_wrAddr[chn]->getVal(val));
+}
+
+void CATCACommonFwAdapt::getWfEngineStatus(uint32_t *val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_status[chn]->getVal(val));
+}
+
+void CATCACommonFwAdapt::setWfEngineStartAddr(uint64_t val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_startAddr[chn]->setVal(val));
+}
+
+void CATCACommonFwAdapt::setWfEngineEndAddr(uint64_t val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_endAddr[chn]->setVal(val));
+}
+
+void CATCACommonFwAdapt::enableWfEngine(uint32_t val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_enabled[chn]->setVal(val?1:0));
+}
+
+void CATCACommonFwAdapt::setWfEngineMode(uint32_t val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_mode[chn]->setVal(val));
+}
+
+void CATCACommonFwAdapt::setWfEngineMsgDest(uint32_t val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_msgDest[chn]->setVal(val));
+}
+
+void CATCACommonFwAdapt::setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_framesAfterTrigger[chn]->setVal(val));
+}
+
+
+void CATCACommonFwAdapt::initWfEngine(int index)
+{
+    CPSW_TRY_CATCH((_waveformEngine+index)->_initialize->execute());
 }

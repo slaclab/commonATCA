@@ -61,6 +61,17 @@ public:
     virtual void getWfEngineStartAddr(uint64_t *val, int index, int chn) = 0;
     virtual void getWfEngineEndAddr(uint64_t *val, int index, int chn) = 0;
     virtual void getWfEngineWrAddr(uint64_t *val, int index, int chn) = 0;
+    virtual void getWfEngineStatus(uint32_t *val, int index, int chn) = 0;
+
+    virtual void setWfEngineStartAddr(uint64_t val, int index, int chn) = 0;
+    virtual void setWfEngineEndAddr(uint64_t val, int index, int chn) = 0;
+    virtual void enableWfEngine(uint32_t val, int index, int chn) = 0;
+    virtual void setWfEngineMode(uint32_t val, int index, int chn) = 0;
+    virtual void setWfEngineMsgDest(uint32_t val, int index, int chn) = 0;
+    virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn) = 0;
+
+    virtual void initWfEngine(int index) = 0;
+
 
 };
 
