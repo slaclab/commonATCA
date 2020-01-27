@@ -257,7 +257,7 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
         }
     }
 
-    init_waveformBuffers();
+    init_waveformBuffers();  // will be commented out after epics PVs are enabled 
 }
 
 void CATCACommonFwAdapt::init_waveformBuffers(void)
