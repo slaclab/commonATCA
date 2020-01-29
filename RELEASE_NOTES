@@ -1,3 +1,7 @@
+R1.0.0          Jan-29-2020     Kukhee Kim
+                - build against cpsw/framework R4.4.1
+                - build with buildroot-2019.08
+
 commonATCA API layer: Nov. 11, 2019
                 Initial import into GIT repo
                 Merge crossbarControl API

@@ -1,4 +1,4 @@
-CPSW_DIR=/afs/slac/g/lcls/package/cpsw/framework/R4.3.1/src
+CPSW_DIR=/afs/slac/g/lcls/package/cpsw/framework/R4.4.1/src
 
 CCACHE_DISABLE=1
 
