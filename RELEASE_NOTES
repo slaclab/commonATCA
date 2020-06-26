@@ -1,3 +1,6 @@
+R1.1.0          Jun-26-2020     Kukhee Kim
+                - reducedown JESD 8 to 6
+
 R1.0.0          Jan-29-2020     Kukhee Kim
                 - build against cpsw/framework R4.4.1
                 - build with buildroot-2019.08
