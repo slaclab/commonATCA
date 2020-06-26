@@ -15,7 +15,7 @@
 #define MAX_DAQMUX_CNT     2
 #define MAX_WAVEFORMENGINE_CNT 2
 
-#define MAX_JESD_CNT       8
+#define MAX_JESD_CNT       6
 #define NUM_JESD           2
 #define JESD_CNT_STR       "JesdRx/StatusValidCnt[%d]"
 
@@ -176,10 +176,12 @@ ATCACommonFw IATCACommonFw::create(Path p)
 CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEntryImpl> ie) :
     IEntryAdapt(k, p, ie),
     _p_axiVersion( p->findByName("AmcCarrierCore/AxiVersion")),
-    _p_bsi( p->findByName("AmcCarrierCore/AmcCarrierBsi")),
-    _p_jesd0( p->findByName("AppTop/AppTopJesd[0]")),
-    _p_jesd1( p->findByName("AppTop/AppTopJesd[1]"))
+    _p_bsi( p->findByName("AmcCarrierCore/AmcCarrierBsi")) 
 {
+    _p_jesd0 = p->findByName("AppTop/AppTopJesd[0]");
+    _p_jesd1 = p->findByName("AppTop/AppTopJesd[1]");
+
+
     _p_daqMuxV2[0] = p->findByName("AppTop/DaqMuxV2[0]");
     _p_daqMuxV2[1] = p->findByName("AppTop/DaqMuxV2[1]");
 
@@ -323,6 +325,11 @@ void CATCACommonFwAdapt::getEthUpTimeCnt(uint32_t *cnt)
 
 void CATCACommonFwAdapt::getJesdCnt(uint32_t *cnt, int i, int j)
 {
+    if(j >= MAX_JESD_CNT) {
+        *cnt = 0;
+        return;
+    }
+
     switch(i) {
         case 0:
             CPSW_TRY_CATCH(_jesd0ValidCnt[j]->getVal(cnt));
