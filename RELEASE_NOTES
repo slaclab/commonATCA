@@ -1,3 +1,8 @@
+R1.2.0          Jun-29-2020     Kukhee Kim
+                - add epics variable to choose yaml style
+                  var(Gen2UpConvYaml, 0)  --- Gen1 style
+                  var(Gen2UpConvYaml, 1)  --- Gen2 style
+
 R1.1.0          Jun-26-2020     Kukhee Kim
                 - reducedown JESD 8 to 6
 

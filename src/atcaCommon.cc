@@ -31,7 +31,7 @@
 
 
 extern "C" {
-int32_t _GEN2_UPCONV_YAML_= 0;    // will be expose to epics ioc shell variable  0: old upconverter, 1: gen2 upconverter
+int32_t Gen2UpConvYaml = 0;    // will be expose to epics ioc shell variable  0: old upconverter, 1: gen2 upconverter
 }
 
 
@@ -183,7 +183,7 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     _p_axiVersion( p->findByName("AmcCarrierCore/AxiVersion")),
     _p_bsi( p->findByName("AmcCarrierCore/AmcCarrierBsi")) 
 {
-    if(_GEN2_UPCONV_YAML_) {   /* JESD path setup for Gen2UpConverter */
+    if(Gen2UpConvYaml) {   /* JESD path setup for Gen2UpConverter */
         _p_jesd0 = p->findByName("AppTop/AppTopJesd0");
         _p_jesd1 = p->findByName("AppTop/AppTopJesd1");
 
