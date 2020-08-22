@@ -19,6 +19,7 @@ public:
     virtual void getBuildStamp(uint8_t *str)             = 0;
     virtual void getFpgaVersion(uint32_t *ver)           = 0;
     virtual void getEthUpTimeCnt(uint32_t *cnt)          = 0;
+    virtual void getGitHash(uint8_t *str)                = 0;
     virtual void getJesdCnt(uint32_t *cnt, int i, int j) = 0;
 
     // DaqMux Commands

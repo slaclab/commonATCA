@@ -1,3 +1,6 @@
+R1.3.0          Aug-22-2020     Kukhee Kim
+                - add GitHash
+
 R1.2.0          Jun-29-2020     Kukhee Kim
                 - add epics variable to choose yaml style
                   var(Gen2UpConvYaml, 0)  --- Gen1 style

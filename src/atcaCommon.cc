@@ -58,6 +58,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         ScalVal_RO   _buildStamp;
         ScalVal_RO   _fpgaVersion;
         ScalVal_RO   _EthUpTimeCnt;
+        ScalVal_RO   _GitHash;
 // JESD Counter
         ScalVal_RO   _jesd0ValidCnt[MAX_JESD_CNT];
         ScalVal_RO   _jesd1ValidCnt[MAX_JESD_CNT];
@@ -116,6 +117,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void getBuildStamp(uint8_t *str);
         virtual void getFpgaVersion(uint32_t *ver);
         virtual void getEthUpTimeCnt(uint32_t *cnt);
+        virtual void getGitHash(uint8_t *str);
         virtual void getJesdCnt(uint32_t *cnt, int i, int j);
 
         // DaqMux Commands
@@ -203,7 +205,8 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     _buildStamp   = IScalVal_RO::create(_p_axiVersion->findByName("BuildStamp"));
     _fpgaVersion  = IScalVal_RO::create(_p_axiVersion->findByName("FpgaVersion"));
     _EthUpTimeCnt = IScalVal_RO::create(_p_bsi->findByName("EthUpTime"));
-    
+    _GitHash      = IScalVal_RO::create(_p_axiVersion->findByName("GitHash"));
+
 
     for(int i = 0; i<MAX_JESD_CNT; i++) {
         char name[80];
@@ -351,6 +354,17 @@ void CATCACommonFwAdapt::getJesdCnt(uint32_t *cnt, int i, int j)
     }
 }
 
+void CATCACommonFwAdapt::getGitHash(uint8_t *str)
+{
+    uint8_t githash[32];
+
+
+    CPSW_TRY_CATCH(_GitHash->getVal(githash, 20));
+
+    for(int i = 0; i < 20; i++) {
+        sprintf((char*) (str+(2*i)), "%2.2x", githash[20-1-i]);
+    }
+}
 
 void CATCACommonFwAdapt::triggerDaq(int index)
 {
