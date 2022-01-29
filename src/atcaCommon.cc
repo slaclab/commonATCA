@@ -41,6 +41,7 @@ typedef shared_ptr<CATCACommonFwAdapt> ATCACommonFwAdapt;
 class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
     protected:
         Path         _p_axiVersion;
+        Path         _p_axiSysMonUltraScale;
         Path         _p_bsi;
         Path         _p_jesd0;
         Path         _p_jesd1;
@@ -59,6 +60,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         ScalVal_RO   _fpgaVersion;
         ScalVal_RO   _EthUpTimeCnt;
         ScalVal_RO   _GitHash;
+        ScalVal_RO   _fpgaTemp;
 // JESD Counter
         ScalVal_RO   _jesd0ValidCnt[MAX_JESD_CNT];
         ScalVal_RO   _jesd1ValidCnt[MAX_JESD_CNT];
@@ -116,6 +118,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void getUpTimeCnt(uint32_t *cnt);
         virtual void getBuildStamp(uint8_t *str);
         virtual void getFpgaVersion(uint32_t *ver);
+        virtual void getFpgaTemperature(uint32_t *val);
         virtual void getEthUpTimeCnt(uint32_t *cnt);
         virtual void getGitHash(uint8_t *str);
         virtual void getJesdCnt(uint32_t *cnt, int i, int j);
@@ -183,6 +186,7 @@ ATCACommonFw IATCACommonFw::create(Path p)
 CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEntryImpl> ie) :
     IEntryAdapt(k, p, ie),
     _p_axiVersion( p->findByName("AmcCarrierCore/AxiVersion")),
+    _p_axiSysMonUltraScale( p->findByName("AmcCarrierCore/AxiSysMonUltraScale")),
     _p_bsi( p->findByName("AmcCarrierCore/AmcCarrierBsi")) 
 {
     if(Gen2UpConvYaml) {   /* JESD path setup for Gen2UpConverter */
@@ -204,6 +208,7 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     _upTimeCnt    = IScalVal_RO::create(_p_axiVersion->findByName("UpTimeCnt"));
     _buildStamp   = IScalVal_RO::create(_p_axiVersion->findByName("BuildStamp"));
     _fpgaVersion  = IScalVal_RO::create(_p_axiVersion->findByName("FpgaVersion"));
+    _fpgaTemp     = IScalVal_RO::create(_p_axiSysMonUltraScale->findByName("Temperature"));
     _EthUpTimeCnt = IScalVal_RO::create(_p_bsi->findByName("EthUpTime"));
     _GitHash      = IScalVal_RO::create(_p_axiVersion->findByName("GitHash"));
 
@@ -331,6 +336,10 @@ void CATCACommonFwAdapt::getFpgaVersion(uint32_t *ver)
     CPSW_TRY_CATCH(_fpgaVersion->getVal(ver));
 }
 
+void CATCACommonFwAdapt::getFpgaTemperature(uint32_t *val)
+{
+    CPSW_TRY_CATCH(_fpgaTemp->getVal(val));
+}
 
 void CATCACommonFwAdapt::getEthUpTimeCnt(uint32_t *cnt)
 {
