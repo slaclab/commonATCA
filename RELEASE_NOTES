@@ -1,3 +1,8 @@
+R2.0.0-beta     July-19-2022    Dawood Alnajjar
+                - Delete waveform engine initialization
+                  in driver and leave it to YAML 
+                  configuration file
+
 R1.3.1          Jan-27-2022     Kukhee Kim
                 - add FPGA temperature reading
 

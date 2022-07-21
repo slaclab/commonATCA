@@ -109,7 +109,6 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         Command     _initialize;
         } _waveformEngine[MAX_WAVEFORMENGINE_CNT];
 
-        void init_waveformBuffers(void);
 
     public:
         CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEntryImpl> ie);
@@ -278,30 +277,6 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
         }
     }
 
-    init_waveformBuffers();  // will be commented out after epics PVs are enabled 
-}
-
-void CATCACommonFwAdapt::init_waveformBuffers(void)
-{
-//
-// set up waveform engines with a default setting
-//
-    for(int i = 0; i < MAX_WAVEFORMENGINE_CNT; i++) {
-        uint32_t size  = 0x10000000;    /* 256MB for each waveform */
-        uint32_t start = 0;
-
-        for(int j = 0; j < 4; j++) {
-            (_waveformEngine+i)->_startAddr[j]->setVal(start);
-            (_waveformEngine+i)->_endAddr[j]->setVal(start + size -1);
-            (_waveformEngine+i)->_framesAfterTrigger[j]->setVal((false)?0:1);
-            (_waveformEngine+i)->_enabled[j]->setVal(1);  // enable
-            (_waveformEngine+i)->_mode[j]->setVal(1);     // done when full
-            (_waveformEngine+i)->_msgDest[j]->setVal(1);  // auto readout
-
-            start += size;
-        }
-        (_waveformEngine+i)->_initialize->execute();
-    }
 }
 
 void CATCACommonFwAdapt::createStreams(ConstPath p, const char *prefix = NULL)
