@@ -73,7 +73,7 @@ public:
     virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn) = 0;
 
     virtual void initWfEngine(int index) = 0;
-
+    virtual void setupWaveformEngines(unsigned waveformEngineIndex) = 0;
 
 };
 

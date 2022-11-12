@@ -109,6 +109,20 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         Command     _initialize;
         } _waveformEngine[MAX_WAVEFORMENGINE_CNT];
 
+        enum WFEMsgDstEnums{
+            WFEMsgDstSoftware = 0,
+            WFEMsgDstAutoReadOut = 1
+        };
+
+        enum WFEModeEnums{
+            WFEModeWrap = 0,
+            WFEModeDoneWhenFull = 1
+        };
+
+        enum WFEEnableEnums{
+            WFEDisable = 0,
+            WFEEnable = 1
+        };
 
     public:
         CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEntryImpl> ie);
@@ -172,7 +186,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn);
 
         virtual void initWfEngine(int index);
-
+        virtual void setupWaveformEngines(unsigned waveFormEngineIndex);
 
 };
 
@@ -636,4 +650,27 @@ void CATCACommonFwAdapt::setWfEngineFramesAfterTrigger(uint32_t val, int index, 
 void CATCACommonFwAdapt::initWfEngine(int index)
 {
     CPSW_TRY_CATCH((_waveformEngine+index)->_initialize->execute());
+}
+
+void CATCACommonFwAdapt::setupWaveformEngines(unsigned waveformEngineIndex)
+{
+    uint32_t framesAfterTriggerVal = 0;
+    
+    const uint64_t size  = 0x0000000010000000;    /* 256MB for each waveform */
+    uint64_t start = 0x0000000100000000;
+    if (waveformEngineIndex != 0 && waveformEngineIndex != 1)
+        return;
+
+    for(int j = 0; j < 4; j++) {
+        (_waveformEngine+waveformEngineIndex)->_startAddr[j]->setVal(start);
+        (_waveformEngine+waveformEngineIndex)->_endAddr[j]->setVal(start + size -1);
+        (_waveformEngine+waveformEngineIndex)->_framesAfterTrigger[j]->setVal(framesAfterTriggerVal);
+        (_waveformEngine+waveformEngineIndex)->_enabled[j]->setVal(WFEEnable);
+        (_waveformEngine+waveformEngineIndex)->_mode[j]->setVal(WFEModeDoneWhenFull); 
+        (_waveformEngine+waveformEngineIndex)->_msgDest[j]->setVal(WFEMsgDstAutoReadOut);
+
+        start += size;
+    }
+    (_waveformEngine+waveformEngineIndex)->_initialize->execute();
+
 }
