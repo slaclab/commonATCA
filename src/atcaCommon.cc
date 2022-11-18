@@ -124,6 +124,21 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
             WFEEnable = 1
         };
 
+        enum DMDaqModeEnums{
+            TriggerMode = 0,
+            ContinuousMode = 1
+        };
+
+        enum DMHWFreezeEnableEnums{
+            DMHWFreezeDisable = 0,
+            DMHWFreezeEnable = 1
+        };
+
+        enum DMDecimationEnableEnums{
+            DMDecimationDisable = 0,
+            DMDecimationEnable = 1
+        };
+
     public:
         CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEntryImpl> ie);
         virtual void createStreams(ConstPath p, const char *prefix);
@@ -186,7 +201,8 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn);
 
         virtual void initWfEngine(int index);
-        virtual void setupWaveformEngines(unsigned waveFormEngineIndex);
+        virtual void setupWaveformEngine(unsigned waveFormEngineIndex);
+        virtual void setupDaqMux(unsigned daqMuxIndex);
 
 };
 
@@ -652,7 +668,7 @@ void CATCACommonFwAdapt::initWfEngine(int index)
     CPSW_TRY_CATCH((_waveformEngine+index)->_initialize->execute());
 }
 
-void CATCACommonFwAdapt::setupWaveformEngines(unsigned waveformEngineIndex)
+void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex)
 {
     uint32_t framesAfterTriggerVal = 0;
     
@@ -662,15 +678,33 @@ void CATCACommonFwAdapt::setupWaveformEngines(unsigned waveformEngineIndex)
         return;
 
     for(int j = 0; j < 4; j++) {
-        (_waveformEngine+waveformEngineIndex)->_startAddr[j]->setVal(start);
-        (_waveformEngine+waveformEngineIndex)->_endAddr[j]->setVal(start + size -1);
-        (_waveformEngine+waveformEngineIndex)->_framesAfterTrigger[j]->setVal(framesAfterTriggerVal);
-        (_waveformEngine+waveformEngineIndex)->_enabled[j]->setVal(WFEEnable);
-        (_waveformEngine+waveformEngineIndex)->_mode[j]->setVal(WFEModeDoneWhenFull); 
-        (_waveformEngine+waveformEngineIndex)->_msgDest[j]->setVal(WFEMsgDstAutoReadOut);
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_startAddr[j]->setVal(start));
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_endAddr[j]->setVal(start + size -1));
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_framesAfterTrigger[j]->setVal(framesAfterTriggerVal));
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_enabled[j]->setVal(WFEEnable));
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_mode[j]->setVal(WFEModeDoneWhenFull)); 
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_msgDest[j]->setVal(WFEMsgDstAutoReadOut));
 
         start += size;
     }
-    (_waveformEngine+waveformEngineIndex)->_initialize->execute();
+    CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_initialize->execute());
+
+}
+
+void CATCACommonFwAdapt::setupDaqMux(unsigned daqMuxIndex)
+{
+    uint32_t decimationRateDiv = 0;
+
+    if (daqMuxIndex != 0 && daqMuxIndex != 1)
+        return;
+
+    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_clearTrigStatus->execute());
+    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_daqMode->setVal(TriggerMode));
+    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_freezeHwMask->setVal(DMHWFreezeDisable));
+    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_decimationRateDiv->setVal(decimationRateDiv));
+    for(int j = 0; j< 4; j++) {
+        CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_decimation[j]->setVal(DMDecimationDisable));
+    }
+    CPSW_TRY_CATCH((_waveformEngine+daqMuxIndex)->_initialize->execute());
 
 }
