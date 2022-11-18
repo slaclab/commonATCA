@@ -201,7 +201,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn);
 
         virtual void initWfEngine(int index);
-        virtual void setupWaveformEngine(unsigned waveFormEngineIndex);
+        virtual void setupWaveformEngine(unsigned waveFormEngineIndex, uint64_t sizeInBytes);
         virtual void setupDaqMux(unsigned daqMuxIndex);
 
 };
@@ -668,24 +668,25 @@ void CATCACommonFwAdapt::initWfEngine(int index)
     CPSW_TRY_CATCH((_waveformEngine+index)->_initialize->execute());
 }
 
-void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex)
+void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint64_t sizeInBytes)
 {
     uint32_t framesAfterTriggerVal = 0;
     
-    const uint64_t size  = 0x0000000010000000;    /* 256MB for each waveform */
-    uint64_t start = 0x0000000100000000;
+    uint64_t start = 0x0000000100000000 + waveformEngineIndex * 0x80000000;
+    uint64_t step  = 0x0000000020000000;
+
     if (waveformEngineIndex != 0 && waveformEngineIndex != 1)
         return;
 
     for(int j = 0; j < 4; j++) {
         CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_startAddr[j]->setVal(start));
-        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_endAddr[j]->setVal(start + size -1));
+        CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_endAddr[j]->setVal(start + sizeInBytes));
         CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_framesAfterTrigger[j]->setVal(framesAfterTriggerVal));
         CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_enabled[j]->setVal(WFEEnable));
         CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_mode[j]->setVal(WFEModeDoneWhenFull)); 
         CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_msgDest[j]->setVal(WFEMsgDstAutoReadOut));
 
-        start += size;
+        start += step;
     }
     CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_initialize->execute());
 
