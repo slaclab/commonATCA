@@ -125,8 +125,8 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         };
 
         enum DMDaqModeEnums{
-            TriggerMode = 0,
-            ContinuousMode = 1
+            DMTriggerMode = 0,
+            DMContinuousMode = 1
         };
 
         enum DMHWFreezeEnableEnums{
@@ -694,18 +694,13 @@ void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint6
 
 void CATCACommonFwAdapt::setupDaqMux(unsigned daqMuxIndex)
 {
-    uint32_t decimationRateDiv = 0;
 
     if (daqMuxIndex != 0 && daqMuxIndex != 1)
         return;
 
     CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_clearTrigStatus->execute());
-    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_daqMode->setVal(TriggerMode));
+    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_daqMode->setVal(DMTriggerMode));
     CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_freezeHwMask->setVal(DMHWFreezeDisable));
-    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_decimationRateDiv->setVal(decimationRateDiv));
-    for(int j = 0; j< 4; j++) {
-        CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_decimation[j]->setVal(DMDecimationDisable));
-    }
     CPSW_TRY_CATCH((_waveformEngine+daqMuxIndex)->_initialize->execute());
 
 }
