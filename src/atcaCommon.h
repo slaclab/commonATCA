@@ -22,7 +22,8 @@ public:
     virtual void getEthUpTimeCnt(uint32_t *cnt)          = 0;
     virtual void getGitHash(uint8_t *str)                = 0;
     virtual void getJesdCnt(uint32_t *cnt, int i, int j) = 0;
-
+    virtual void getAmcClkFreq(uint32_t *freq, int i)    = 0;
+    
     // DaqMux Commands
     virtual void triggerDaq(int index)                   = 0;
     virtual void armHwTrigger(int index)                 = 0;

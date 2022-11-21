@@ -13,6 +13,7 @@
 
 #define MAX_DEBUG_STREAM   8
 #define MAX_DAQMUX_CNT     2
+#define MAX_AMC_CNT        2
 #define MAX_WAVEFORMENGINE_CNT 2
 
 #define MAX_JESD_CNT       6
@@ -46,6 +47,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         Path         _p_jesd0;
         Path         _p_jesd1;
 
+        Path         _p_amcClkFreq[MAX_AMC_CNT];
         Path         _p_waveformEngine[MAX_WAVEFORMENGINE_CNT];
 
 
@@ -61,6 +63,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         ScalVal_RO   _EthUpTimeCnt;
         ScalVal_RO   _GitHash;
         ScalVal_RO   _fpgaTemp;
+        ScalVal_RO   _amcClkFreq[MAX_AMC_CNT];
 // JESD Counter
         ScalVal_RO   _jesd0ValidCnt[MAX_JESD_CNT];
         ScalVal_RO   _jesd1ValidCnt[MAX_JESD_CNT];
@@ -150,6 +153,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void getEthUpTimeCnt(uint32_t *cnt);
         virtual void getGitHash(uint8_t *str);
         virtual void getJesdCnt(uint32_t *cnt, int i, int j);
+        virtual void getAmcClkFreq(uint32_t *freq, int i);
 
         // DaqMux Commands
         virtual void triggerDaq(int index);
@@ -234,6 +238,16 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     _p_waveformEngine[0] = p->findByName("AmcCarrierCore/AmcCarrierBsa/BsaWaveformEngine[0]/WaveformEngineBuffers");
     _p_waveformEngine[1] = p->findByName("AmcCarrierCore/AmcCarrierBsa/BsaWaveformEngine[1]/WaveformEngineBuffers");
 
+    for(int i = 0; i< MAX_AMC_CNT; i++) {
+        char path[100];
+        sprintf(path, "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq", i); 
+        try{
+            _p_amcClkFreq[i] = p->findByName(path);
+        } catch (...){
+            // Amc not instantiated. Do nothing.
+        };
+    }
+
     _upTimeCnt    = IScalVal_RO::create(_p_axiVersion->findByName("UpTimeCnt"));
     _buildStamp   = IScalVal_RO::create(_p_axiVersion->findByName("BuildStamp"));
     _fpgaVersion  = IScalVal_RO::create(_p_axiVersion->findByName("FpgaVersion"));
@@ -249,6 +263,11 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
         _jesd1ValidCnt[i] = IScalVal_RO::create(_p_jesd1->findByName(name));
     }
 
+    for(int i = 0; i<MAX_AMC_CNT; i++) {
+        if (_p_amcClkFreq[i] != NULL)
+            _amcClkFreq[i] = IScalVal_RO::create(_p_amcClkFreq[i]);
+    }
+ 
     for(int i = 0; i<MAX_DAQMUX_CNT; i++) {
         (_daqMux+i)->_triggerCasc       = IScalVal::create(_p_daqMuxV2[i]->findByName("TriggerCascMask"));
         (_daqMux+i)->_autoRearm         = IScalVal::create(_p_daqMuxV2[i]->findByName("TriggerHwAutoRearm"));
@@ -325,6 +344,14 @@ int64_t CATCACommonFwAdapt::readStream(uint32_t index, uint8_t *buff, uint64_t s
     return _stream[index]->read(buff, size, timeout);
 }
 
+
+void CATCACommonFwAdapt::getAmcClkFreq(uint32_t *freq, int i)
+{
+    if (_p_amcClkFreq[i] != NULL)
+        _amcClkFreq[i]->getVal(freq);
+    else
+        freq = 0;
+}
 
 void CATCACommonFwAdapt::getUpTimeCnt(uint32_t *cnt)
 {
