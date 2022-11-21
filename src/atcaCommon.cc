@@ -671,9 +671,32 @@ void CATCACommonFwAdapt::initWfEngine(int index)
 void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint64_t sizeInBytes)
 {
     uint32_t framesAfterTriggerVal = 0;
-    
-    uint64_t start = 0x0000000100000000 + waveformEngineIndex * 0x80000000;
-    uint64_t step  = 0x0000000020000000;
+    uint64_t start;
+    uint64_t step;
+    uint64_t memoryPerWaveformEngine, waveFormEngineBase, totalMemoryAllocated;
+    /**
+     * sizeInBytes <= 256 MB (268435456) use address space 0x0x0000000100000000 - 0x0000000180000000 (2GB)
+     * sizeInBytes > 256 MB &&  < 512 MB use address space 0x0x0000 0001 0000 0000 - 0x0000 0002 0000 0000 (4GB)
+     * sizeInBytes > 512 MB (536870912) use address space 0x0x0000 0000 0000 0000 - 0x0000 0002 0000 0000 (8GB)
+     **/
+
+     if (sizeInBytes <= 0x10000000) // Allocate 2 GB
+     {
+        totalMemoryAllocated = 0x80000000;
+        waveFormEngineBase = 0x0000000100000000;
+     } else if (sizeInBytes > 0x10000000 && sizeInBytes > 0x20000000 ) // Allocate 4GB
+     {
+        totalMemoryAllocated = 0x100000000;
+        waveFormEngineBase = 0x0000000100000000;
+     } else  // Allocate 8GB
+     {
+        totalMemoryAllocated = 0x200000000;
+        waveFormEngineBase = 0x0000000000000000;
+     }
+
+    memoryPerWaveformEngine = totalMemoryAllocated >> 1;
+    start = waveFormEngineBase + waveformEngineIndex * memoryPerWaveformEngine;
+    step  = totalMemoryAllocated >> 3; 
 
     if (waveformEngineIndex != 0 && waveformEngineIndex != 1)
         return;
