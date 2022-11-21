@@ -711,11 +711,11 @@ void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint6
      {
         totalMemoryAllocated = 0x80000000;
         waveFormEngineBase = 0x0000000100000000;
-     } else if (sizeInBytes > 0x10000000 && sizeInBytes > 0x20000000 ) // Allocate 4GB
+     } else if (sizeInBytes > 0x10000000 && sizeInBytes < 0x20000000 ) // Allocate 4GB
      {
         totalMemoryAllocated = 0x100000000;
         waveFormEngineBase = 0x0000000100000000;
-     } else  // Allocate 8GB
+     } else  // sizeInBytes > 0x20000000 -- Allocate 8GB
      {
         totalMemoryAllocated = 0x200000000;
         waveFormEngineBase = 0x0000000000000000;
