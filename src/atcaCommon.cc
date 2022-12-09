@@ -205,7 +205,8 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn);
 
         virtual void initWfEngine(int index);
-        virtual void setupWaveformEngine(unsigned waveFormEngineIndex, uint64_t sizeInBytes);
+        virtual int  setupWaveformEngine(unsigned waveFormEngineIndex, uint64_t sizeInBytes, dram_region_size_t ramAllocatedSize);
+        virtual dram_region_size_t getAllocableSize(unsigned sizeInBytes);
         virtual void setupDaqMux(unsigned daqMuxIndex);
 
 };
@@ -695,7 +696,21 @@ void CATCACommonFwAdapt::initWfEngine(int index)
     CPSW_TRY_CATCH((_waveformEngine+index)->_initialize->execute());
 }
 
-void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint64_t sizeInBytes)
+dram_region_size_t CATCACommonFwAdapt::getAllocableSize(unsigned sizeInBytes)
+{
+     if (sizeInBytes <= 0x10000000)
+     {
+        return twogb;
+     } else if (sizeInBytes > 0x10000000 && sizeInBytes <= 0x20000000) 
+     {
+        return fourgb;
+     } else
+     {
+        return eightgb;
+     }
+}
+
+int CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint64_t sizeInBytes, dram_region_size_t ramAllocatedSize)
 {
     uint32_t framesAfterTriggerVal = 0;
     uint64_t start;
@@ -707,18 +722,23 @@ void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint6
      * sizeInBytes > 512 MB (536870912) use address space 0x0x0000 0000 0000 0000 - 0x0000 0002 0000 0000 (8GB)
      **/
 
-     if (sizeInBytes <= 0x10000000) // Allocate 2 GB
+     if (sizeInBytes <= 0x10000000 && (ramAllocatedSize == autogb || ramAllocatedSize == twogb)) // Allocate 2 GB
      {
         totalMemoryAllocated = 0x80000000;
         waveFormEngineBase = 0x0000000100000000;
-     } else if (sizeInBytes > 0x10000000 && sizeInBytes < 0x20000000 ) // Allocate 4GB
+     } else if ( (sizeInBytes > 0x10000000 && sizeInBytes <= 0x20000000) || 
+                 (sizeInBytes <= 0x20000000 && ramAllocatedSize == fourgb )
+                 ) // Allocate 4GB
      {
         totalMemoryAllocated = 0x100000000;
         waveFormEngineBase = 0x0000000100000000;
-     } else  // sizeInBytes > 0x20000000 -- Allocate 8GB
+     } else if (( sizeInBytes > 0x20000000  && ramAllocatedSize == autogb) ||
+                  ramAllocatedSize == eightgb)  // sizeInBytes > 0x20000000 -- Allocate 8GB
      {
         totalMemoryAllocated = 0x200000000;
         waveFormEngineBase = 0x0000000000000000;
+     } else {
+        return -1;
      }
 
     memoryPerWaveformEngine = totalMemoryAllocated >> 1;
@@ -726,7 +746,7 @@ void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint6
     step  = totalMemoryAllocated >> 3; 
 
     if (waveformEngineIndex != 0 && waveformEngineIndex != 1)
-        return;
+        return -1;
 
     for(int j = 0; j < 4; j++) {
         CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_startAddr[j]->setVal(start));
@@ -739,7 +759,7 @@ void CATCACommonFwAdapt::setupWaveformEngine(unsigned waveformEngineIndex, uint6
         start += step;
     }
     CPSW_TRY_CATCH((_waveformEngine+waveformEngineIndex)->_initialize->execute());
-
+    return 0;
 }
 
 void CATCACommonFwAdapt::setupDaqMux(unsigned daqMuxIndex)

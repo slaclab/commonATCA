@@ -4,6 +4,13 @@
 #include <cpsw_api_user.h>
 #include <cpsw_api_builder.h>
 
+typedef enum {
+   twogb = 0,
+   fourgb,
+   eightgb,
+   autogb
+} dram_region_size_t;
+
 class IATCACommonFw;
 typedef shared_ptr<IATCACommonFw> ATCACommonFw;
 
@@ -74,7 +81,8 @@ public:
     virtual void setWfEngineFramesAfterTrigger(uint32_t val, int index, int chn) = 0;
 
     virtual void initWfEngine(int index) = 0;
-    virtual void setupWaveformEngine(unsigned waveformEngineIndex, uint64_t sizeInBytes) = 0;
+    virtual int  setupWaveformEngine(unsigned waveformEngineIndex, uint64_t sizeInBytes, dram_region_size_t ramAllocatedSize) = 0;
+    virtual dram_region_size_t getAllocableSize(unsigned sizeInBytes) = 0;
     virtual void setupDaqMux(unsigned daqMuxIndex) = 0;
 };
 
