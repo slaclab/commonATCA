@@ -772,5 +772,6 @@ void CATCACommonFwAdapt::setupDaqMux(unsigned daqMuxIndex)
     CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_daqMode->setVal(DMTriggerMode));
     CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_freezeHwMask->setVal(DMHWFreezeDisable));
     CPSW_TRY_CATCH((_waveformEngine+daqMuxIndex)->_initialize->execute());
+    CPSW_TRY_CATCH((_daqMux+daqMuxIndex)->_packetHeader->setVal(true?1:0));
 
 }
