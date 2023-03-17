@@ -239,13 +239,41 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
     _p_waveformEngine[0] = p->findByName("AmcCarrierCore/AmcCarrierBsa/BsaWaveformEngine[0]/WaveformEngineBuffers");
     _p_waveformEngine[1] = p->findByName("AmcCarrierCore/AmcCarrierBsa/BsaWaveformEngine[1]/WaveformEngineBuffers");
 
+    /* All paths to AmcClkFreq register
+       GMD: AppTop/AppCore/AmcBay1/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq
+       BPMC:AppTop/AppCore/AmcBay0/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq 
+            AppTop/AppCore/AmcBay1/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq
+       BPMCS: AppTop/AppCore/AmcBay0/AmcBpmCore/AmcBpmCtrl/AmcClkFreq
+              AppTop/AppCore/AmcBay1/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq      
+       BPMSS: AppTop/AppCore/AmcBay0/AmcBpmCore/AmcBpmCtrl/AmcClkFreq
+              AppTop/AppCore/AmcBay1/AmcBpmCore/AmcBpmCtrl/AmcClkFreq
+       MPS: AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       BPM: AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       BCM: AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       BLEN:AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+
+       */
     for(int i = 0; i< MAX_AMC_CNT; i++) {
-        char path[100];
-        sprintf(path, "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq", i); 
+        char path[3][100];
+        sprintf(path[0], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq", i); 
+        sprintf(path[1], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcBpmCtrl/AmcClkFreq", i);
+        sprintf(path[2], "AppTop/AppCore/AmcGenericAdcDacCore[%d]/AmcGenericAdcDacCtrl/AmcClkFreq", i);
         try{
-            _p_amcClkFreq[i] = p->findByName(path);
+            _p_amcClkFreq[i] = p->findByName(path[0]);
         } catch (...){
-            // Amc not instantiated. Do nothing.
+            try{
+                _p_amcClkFreq[i] = p->findByName(path[1]);
+            } catch (...){
+                try{
+                    _p_amcClkFreq[i] = p->findByName(path[2]);
+                } catch (...){
+                    // Could not find AMC. Skipping.
+                };
+            };
         };
     }
 
@@ -349,9 +377,12 @@ int64_t CATCACommonFwAdapt::readStream(uint32_t index, uint8_t *buff, uint64_t s
 void CATCACommonFwAdapt::getAmcClkFreq(uint32_t *freq, int i)
 {
     if (_p_amcClkFreq[i] != NULL)
+    {
         _amcClkFreq[i]->getVal(freq);
-    else
-        freq = 0;
+        *freq *= 2;
+    } else {
+        *freq = 0;
+    }
 }
 
 void CATCACommonFwAdapt::getUpTimeCnt(uint32_t *cnt)
