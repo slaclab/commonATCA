@@ -247,34 +247,39 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
               AppTop/AppCore/AmcBay1/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq      
        BPMSS: AppTop/AppCore/AmcBay0/AmcBpmCore/AmcBpmCtrl/AmcClkFreq
               AppTop/AppCore/AmcBay1/AmcBpmCore/AmcBpmCtrl/AmcClkFreq
-       MPS: AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
-            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
-       BPM: AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
-            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
-       BCM: AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
-            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
-       BLEN:AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
-            AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       MPS:   AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+              AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       BPM:   AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+              AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       BCM:   AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+              AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       BLEN:  AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
+              AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
+       LLRF:  AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq
+              AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq
+              AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq
+       LL:    AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq
+              AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq
+              AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq
 
        */
     for(int i = 0; i< MAX_AMC_CNT; i++) {
-        char path[3][100];
+        char path[6][100];
         sprintf(path[0], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq", i); 
         sprintf(path[1], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcBpmCtrl/AmcClkFreq", i);
         sprintf(path[2], "AppTop/AppCore/AmcGenericAdcDacCore[%d]/AmcGenericAdcDacCtrl/AmcClkFreq", i);
-        try{
-            _p_amcClkFreq[i] = p->findByName(path[0]);
-        } catch (...){
+        sprintf(path[3], "AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq");
+        sprintf(path[4], "AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq");
+        sprintf(path[5], "AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq");
+        for (unsigned int j = 0; j < 6; j++)
+        {
             try{
-                _p_amcClkFreq[i] = p->findByName(path[1]);
+                _p_amcClkFreq[i] = p->findByName(path[j]);
+                break;
             } catch (...){
-                try{
-                    _p_amcClkFreq[i] = p->findByName(path[2]);
-                } catch (...){
-                    // Could not find AMC. Skipping.
-                };
-            };
-        };
+                /* Did not find the AMC frequency register. Try another. */
+            }
+        }
     }
 
     _upTimeCnt    = IScalVal_RO::create(_p_axiVersion->findByName("UpTimeCnt"));
