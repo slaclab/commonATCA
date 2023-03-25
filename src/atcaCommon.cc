@@ -255,32 +255,64 @@ CATCACommonFwAdapt::CATCACommonFwAdapt(Key &k, ConstPath p, shared_ptr<const CEn
               AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
        BLEN:  AppTop/AppCore/AmcGenericAdcDacCore[0]/AmcGenericAdcDacCtrl/AmcClkFreq
               AppTop/AppCore/AmcGenericAdcDacCore[1]/AmcGenericAdcDacCtrl/AmcClkFreq
-       LLRF:  AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq
-              AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq
-              AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq
-       LL:    AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq
-              AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq
-              AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq
+       LLRF:  AMC1: AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq
+              AMC0: AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq
+              AMC1: AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq
+       LL:    AMC1: AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq
+              AMC0: AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq
+              AMC1: AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq
 
        */
-    for(int i = 0; i< MAX_AMC_CNT; i++) {
-        char path[6][100];
-        sprintf(path[0], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq", i); 
-        sprintf(path[1], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcBpmCtrl/AmcClkFreq", i);
-        sprintf(path[2], "AppTop/AppCore/AmcGenericAdcDacCore[%d]/AmcGenericAdcDacCtrl/AmcClkFreq", i);
-        sprintf(path[3], "AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq");
-        sprintf(path[4], "AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq");
-        sprintf(path[5], "AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq");
-        for (unsigned int j = 0; j < 6; j++)
+    #define LLRF_UPG1 0 /* AMC1=DAQMUX1 */
+    #define LLRF_UPG2 1 /* AMC1=DAQMUX1 */
+    #define LLRF_DOWN 2 /* AMC0=DAQMUX0 */
+
+
+    #define DAQMUX0 0
+    #define DAQMUX1 1
+
+    for(int daqMuxIndex = 0; daqMuxIndex< MAX_AMC_CNT; daqMuxIndex++) {
+        char path[3][100];
+        sprintf(path[0], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcGenericAdcDacCtrl/AmcClkFreq", daqMuxIndex); 
+        sprintf(path[1], "AppTop/AppCore/AmcBay%d/AmcBpmCore/AmcBpmCtrl/AmcClkFreq", daqMuxIndex);
+        sprintf(path[2], "AppTop/AppCore/AmcGenericAdcDacCore[%d]/AmcGenericAdcDacCtrl/AmcClkFreq", daqMuxIndex);
+        for (unsigned int AmcClkFreqRegIndex = 0; AmcClkFreqRegIndex < 3; AmcClkFreqRegIndex++)
         {
             try{
-                _p_amcClkFreq[i] = p->findByName(path[j]);
+                _p_amcClkFreq[daqMuxIndex] = p->findByName(path[AmcClkFreqRegIndex]);
                 break;
             } catch (...){
                 /* Did not find the AMC frequency register. Try another. */
             }
         }
     }
+
+    char path[3][100];
+    sprintf(path[LLRF_UPG2], "AppTop/AppCore/AmcMrLlrfGen2UpConvert/AmcClkFreq");
+    sprintf(path[LLRF_DOWN], "AppTop/AppCore/AmcMrLlrfDownConvert/AmcClkFreq");
+    sprintf(path[LLRF_UPG1], "AppTop/AppCore/AmcMrLlrfUpConvert/AmcClkFreq");    
+    /* LLRF_DOWN */
+    if (_p_amcClkFreq[DAQMUX0] == NULL)
+    {
+        try{
+            _p_amcClkFreq[DAQMUX0] = p->findByName(path[LLRF_DOWN]);
+        } catch (...){
+            /* Did not find the AMC frequency register. Try another. */
+        }
+    }
+    /* LLRF_UPG1 & LLRF_UPG2 */
+    if (_p_amcClkFreq[DAQMUX1] == NULL)
+    {
+        try{
+            _p_amcClkFreq[DAQMUX1] = p->findByName(path[LLRF_UPG1]);
+        } catch (...){
+            try{
+                _p_amcClkFreq[DAQMUX1] = p->findByName(path[LLRF_UPG2]);
+            } catch (...){
+                /* Did not find the AMC frequency register. Try another. */
+            }
+        }
+    }    
 
     _upTimeCnt    = IScalVal_RO::create(_p_axiVersion->findByName("UpTimeCnt"));
     _buildStamp   = IScalVal_RO::create(_p_axiVersion->findByName("BuildStamp"));
