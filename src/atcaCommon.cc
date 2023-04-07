@@ -190,7 +190,7 @@ class CATCACommonFwAdapt : public IATCACommonFw, public IEntryAdapt {
         virtual void formatSignWidth(uint32_t val, int index, int chn);
         virtual void formatDataWidth(uint32_t val, int index, int chn);
         virtual void enableFormatSign(uint32_t val, int index, int chn);
-        virtual void enableDecimation(uint32_t val, int index, int chn);
+        virtual void enableDecimationAvg(uint32_t val, int index, int chn);
 
         virtual void getWfEngineStartAddr(uint64_t *val, int index, int chn);
         virtual void getWfEngineEndAddr(uint64_t *val, int index, int chn);
@@ -703,7 +703,7 @@ void CATCACommonFwAdapt::enableFormatSign(uint32_t val, int index, int chn)
     CPSW_TRY_CATCH((_daqMux+index)->_formatSign[chn]->setVal(val));
 }
 
-void CATCACommonFwAdapt::enableDecimation(uint32_t val, int index, int chn)
+void CATCACommonFwAdapt::enableDecimationAvg(uint32_t val, int index, int chn)
 {
     CPSW_TRY_CATCH((_daqMux+index)->_decimation[chn]->setVal(val));
 }

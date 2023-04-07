@@ -66,7 +66,7 @@ public:
     virtual void formatSignWidth(uint32_t val, int index, int chn)    = 0;
     virtual void formatDataWidth(uint32_t val, int index, int chn)    = 0;
     virtual void enableFormatSign(uint32_t val, int index, int chn)   = 0;
-    virtual void enableDecimation(uint32_t val, int index, int chn)   = 0;
+    virtual void enableDecimationAvg(uint32_t val, int index, int chn)   = 0;
 
     virtual void getWfEngineStartAddr(uint64_t *val, int index, int chn) = 0;
     virtual void getWfEngineEndAddr(uint64_t *val, int index, int chn) = 0;
