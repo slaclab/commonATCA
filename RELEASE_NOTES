@@ -1,3 +1,6 @@
+R2.0.1          11-01-2024    Jeremy Lorelli
+                - Adjust PACKAGE_TOP/EPICS_PACKAGE_TOP checks. No source code changes.
+
 R2.0.0          08-31/2023    Marcio Donadio
                 - Official release based on R2.0.0-candidate.
 
